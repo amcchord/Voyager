@@ -106,41 +106,34 @@ void loop() {
     t.updateGPS();
 
     // if the current time - the last time we published is greater than your set delay...
-    if (millis()-lastPublish > 10*1000) {
+    if (millis()-lastPublish > 30*1000) {
         // Remember when we published
         lastPublish = millis();
-
-
-
-        updateCurrent(" ");
-        Serial.println("Cellular");
-        Serial.println(sig);
-
-        String pubAccel = String::format("%d,%d,%d", t.readX(), t.readY(), t.readZ());
-        Serial.println(pubAccel);
-        //Particle.publish("A", pubAccel, 60, PRIVATE);
-
-        Serial.println("Updating Temps");
         updateTemperatures();
-        Serial.printf("%.2f,%.2f,%.2f", airTemp, waterTemp, caseTemp );
-        Serial.println("");
+        updateCurrent();
+
+        String vampt = String::format("%.2f",fuel.getVCell()) + "," + String::format("%.2f",fuel.getVCell()) + "," + String::format("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f", sysBusvoltage, sysCurrent_mA, battBusvoltage, battCurrent_mA, airTemp, waterTemp, caseTemp);
+        colorAll(strip.Color(0,0,0), 0);
+
+        String imu = String::format("%d,%d,%d", t.readX(), t.readY(), t.readZ());
+        imu = imu + "," + t.readLat() + "," + t.readLon() + "," + t.getSpeed() + "," + t.getSatellites();
+        Particle.publish("I", imu, 60, PRIVATE);
+        Particle.publish("A", vampt, 60, PRIVATE);
+
+        // Serial.println("Updating Temps");
+        // Serial.printf("%.2f,%.2f,%.2f", airTemp, waterTemp, caseTemp );
+        // Serial.println("");
 
 
-
-
-        Serial.println(t.preNMEA());
-
-        // GPS requires a "fix" on the satellites to give good data,
-        // so we should only publish data if there's a fix
-        // if (t.gpsFix()) {
-        //     // Only publish if we're in transmittingData mode 1;
-        //     if (transmittingData) {
-        //         // Short publish names save data!
-        //         Particle.publish("G", t.readLatLon(), 60, PRIVATE);
-        //     }
-        //     // but always report the data over serial for local development
-        //     Serial.println(t.readLatLon());
-        // }
+        //GPS requires a "fix" on the satellites to give good data,
+        //so we should only publish data if there's a fix
+        if (t.gpsFix()) {
+            // Only publish if we're in transmittingData mode 1;
+            if (transmittingData) {
+                // Short publish names save data!
+                Particle.publish("G", t.readLatLon(), 60, PRIVATE);
+            }
+        }
     }
 }
 
@@ -223,7 +216,7 @@ void printDebugInfo() {
 }
 
 
-int updateCurrent(String command){
+int updateCurrent(){
   sysShuntvoltage = sysLoad.getShuntVoltage_mV();
   sysBusvoltage = sysLoad.getBusVoltage_V();
   sysCurrent_mA = sysLoad.getCurrent_mA();
@@ -233,20 +226,19 @@ int updateCurrent(String command){
   battBusvoltage = battLoad.getBusVoltage_V();
   battCurrent_mA = battLoad.getCurrent_mA();
   battLoadvoltage = battBusvoltage + (battShuntvoltage / 1000);
-
-  Serial.println("System");
-  Serial.print("Bus Voltage:   "); Serial.print(sysBusvoltage); Serial.println(" V");
-  Serial.print("Shunt Voltage: "); Serial.print(sysShuntvoltage); Serial.println(" mV");
-  Serial.print("Load Voltage:  "); Serial.print(sysLoadvoltage); Serial.println(" V");
-  Serial.print("Current:       "); Serial.print(sysCurrent_mA); Serial.println(" mA");
-  Serial.println("");
-
-  Serial.println("Battery");
-  Serial.print("Bus Voltage:   "); Serial.print(battBusvoltage); Serial.println(" V");
-  Serial.print("Shunt Voltage: "); Serial.print(battShuntvoltage); Serial.println(" mV");
-  Serial.print("Load Voltage:  "); Serial.print(battLoadvoltage); Serial.println(" V");
-  Serial.print("Current:       "); Serial.print(battCurrent_mA); Serial.println(" mA");
-  Serial.println("");
+  // Serial.println("System");
+  // Serial.print("Bus Voltage:   "); Serial.print(sysBusvoltage); Serial.println(" V");
+  // Serial.print("Shunt Voltage: "); Serial.print(sysShuntvoltage); Serial.println(" mV");
+  // Serial.print("Load Voltage:  "); Serial.print(sysLoadvoltage); Serial.println(" V");
+  // Serial.print("Current:       "); Serial.print(sysCurrent_mA); Serial.println(" mA");
+  // Serial.println("");
+  //
+  // Serial.println("Battery");
+  // Serial.print("Bus Voltage:   "); Serial.print(battBusvoltage); Serial.println(" V");
+  // Serial.print("Shunt Voltage: "); Serial.print(battShuntvoltage); Serial.println(" mV");
+  // Serial.print("Load Voltage:  "); Serial.print(battLoadvoltage); Serial.println(" V");
+  // Serial.print("Current:       "); Serial.print(battCurrent_mA); Serial.println(" mA");
+  // Serial.println("");
 
 }
 
