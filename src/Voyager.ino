@@ -64,7 +64,7 @@ void setup() {
     // Enable the GPS module. Defaults to off to save power.
     // Takes 1.5s or so because of delays.
     t.gpsOn();
-    t.antennaExternal();
+    //t.antennaExternal();
     battLoad.begin(0x41);
     sysLoad.begin(0x40);
     // Opens up a Serial port so you can listen over USB
@@ -112,28 +112,17 @@ void loop() {
         updateTemperatures();
         updateCurrent();
 
-        String vampt = String::format("%.2f",fuel.getVCell()) + "," + String::format("%.2f",fuel.getVCell()) + "," + String::format("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f", sysBusvoltage, sysCurrent_mA, battBusvoltage, battCurrent_mA, airTemp, waterTemp, caseTemp);
+        String vampt = String::format("%.2f",fuel.getVCell()) + "," + String::format("%.2f",fuel.getSoC()) + "," + String::format("%.2f,%.2f,%.2f,%.2f,%.2f,%.2f,%.2f", sysBusvoltage, sysCurrent_mA, battBusvoltage, battCurrent_mA, airTemp, waterTemp, caseTemp);
         colorAll(strip.Color(0,0,0), 0);
 
         String imu = String::format("%d,%d,%d", t.readX(), t.readY(), t.readZ());
-        imu = imu + "," + t.readLat() + "," + t.readLon() + "," + t.getSpeed() + "," + t.getSatellites();
+        imu = imu + "," + t.readLatDeg() + "," + t.readLonDeg() + "," + t.getSpeed() + "," + t.getSatellites() + "," + t.gpsFix();
         Particle.publish("I", imu, 60, PRIVATE);
         Particle.publish("A", vampt, 60, PRIVATE);
 
         // Serial.println("Updating Temps");
         // Serial.printf("%.2f,%.2f,%.2f", airTemp, waterTemp, caseTemp );
         // Serial.println("");
-
-
-        //GPS requires a "fix" on the satellites to give good data,
-        //so we should only publish data if there's a fix
-        if (t.gpsFix()) {
-            // Only publish if we're in transmittingData mode 1;
-            if (transmittingData) {
-                // Short publish names save data!
-                Particle.publish("G", t.readLatLon(), 60, PRIVATE);
-            }
-        }
     }
 }
 
